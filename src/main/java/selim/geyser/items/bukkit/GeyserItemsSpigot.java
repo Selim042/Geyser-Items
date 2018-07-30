@@ -5,6 +5,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.bukkit.Material;
+import org.bukkit.craftbukkit.v1_12_R1.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -25,12 +26,29 @@ public class GeyserItemsSpigot extends JavaPlugin implements Listener, IGeyserCo
 	public static Logger LOGGER;
 	public static GeyserItemsSpigot INSTANCE;
 	public static NetworkHandler NETWORK;
-	public static final ItemGeyser ITEM_GEYSER_ITEM = new ItemGeyser();
-	public static Material ENUM_GEYSER_ITEM;
+	public static final Item ITEM_GEYSER_ITEM;
+	public static final Material ENUM_GEYSER_ITEM;
+	// private static boolean newItem = false;
+	// private static boolean newMaterial = false;
 
 	static {
-		Item.REGISTRY.a(GeyserItemsInfo.ITEM_ID, new MinecraftKey(GeyserItemsInfo.ID, "geyser_item"),
-				ITEM_GEYSER_ITEM);
+		if (!Item.REGISTRY.d(new MinecraftKey(GeyserItemsInfo.ID, "geyser_item"))) {
+			ITEM_GEYSER_ITEM = new ItemGeyserItem();
+			Item.REGISTRY.a(GeyserItemsInfo.ITEM_ID, new MinecraftKey(GeyserItemsInfo.ID, "geyser_item"),
+					ITEM_GEYSER_ITEM);
+			// newItem = true;
+		} else
+			ITEM_GEYSER_ITEM = Item.REGISTRY.get(new MinecraftKey(GeyserItemsInfo.ID, "geyser_item"));
+		Material item = null;
+		try {
+			item = Material.valueOf("GEYSER_ITEM");
+		} catch (IllegalArgumentException e) {}
+		if (item == null) {
+			ENUM_GEYSER_ITEM = EnumHelperBukkit.addEnum(Material.class, "GEYSER_ITEM",
+					new Class<?>[] { int.class }, GeyserItemsInfo.ITEM_ID);
+			// newMaterial = true;
+		} else
+			ENUM_GEYSER_ITEM = item;
 	}
 
 	@Override
@@ -38,17 +56,23 @@ public class GeyserItemsSpigot extends JavaPlugin implements Listener, IGeyserCo
 		LOGGER = this.getLogger();
 		INSTANCE = this;
 
+		// if (newItem)
+		// System.out.println("registering new item");
+		// else
+		// System.out.println("reusing old item");
+		// if (newMaterial)
+		// System.out.println("registering new material");
+		// else
+		// System.out.println("reusing old material");
+
 		NETWORK = NetworkHandler.registerChannel(this, GeyserItemsInfo.CHANNEL);
 
 		PluginManager manager = this.getServer().getPluginManager();
 		manager.registerEvents(this, this);
-		ENUM_GEYSER_ITEM = EnumHelperBukkit.addEnum(Material.class, "GEYSER_ITEM",
-				new Class<?>[] { int.class }, GeyserItemsInfo.ITEM_ID);
 	}
 
 	@EventHandler
 	public void onPlayerInteract(PlayerInteractEvent event) {
-		// CraftItemStack stack = CraftItemStack.asCraftCopy(event.getItem());
 		event.getPlayer().sendMessage(event.getMaterial().name());
 		// event.getPlayer().sendMessage(CraftItemStack.asNMSCopy(event.getItem()).toString());
 		event.getPlayer().sendMessage("id: " + event.getMaterial().getId());
